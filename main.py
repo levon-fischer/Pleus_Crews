@@ -66,16 +66,27 @@ selected_office = st.selectbox('Select Office', offices)
 if selected_office != 'All':
     sq = sq[sq['OFFICE_SYMBOL'] == selected_office]
 
+# Create graph
+#G = nx.from_pandas_edgelist(sq, source='SUPV_NAME', target='EMPLOYEE', edge_attr='GRADE', create_using=nx.DiGraph())
+
 # Create list of unique supervisors
 supervisors = sq['SUPV_NAME'].unique()
 supervisors = ['All'] + sorted(supervisors)
 # Create dropdown for supervisor selection
 selected_supervisor = st.selectbox('Select Supervisor', supervisors)
 # Filter to selected supervisor
+subtree = nx.DiGraph()
 if selected_supervisor != 'All':
-    sq = sq[sq['SUPV_NAME'] == selected_supervisor]
-
-
+    #sq = sq[sq['SUPV_NAME'] == selected_supervisor]
+    G = nx.from_pandas_edgelist(sq, source='SUPV_NAME', target='EMPLOYEE', edge_attr='GRADE', create_using=nx.DiGraph())
+    root = selected_supervisor
+    for edge in nx.bfs_edges(G, root):
+        source, target = edge
+        subtree.add_edge(source, target)
+else:
+    subtree = nx.from_pandas_edgelist(sq, source='SUPV_NAME', target='EMPLOYEE', edge_attr='GRADE', create_using=nx.DiGraph())
+nodes_list = list(subtree.nodes())
+sq =sq[sq['EMPLOYEE'].isin(nodes_list)]
 # Display dataframe
 st.dataframe(sq, use_container_width=True)
 
@@ -84,8 +95,7 @@ st.dataframe(sq, use_container_width=True)
 
 
 
-# Create graph
-G = nx.from_pandas_edgelist(sq, source='SUPV_NAME', target='EMPLOYEE', edge_attr='GRADE', create_using=nx.DiGraph())
+
 
 # Save graph to dot format
 # graph = nx.drawing.nx_pydot.to_pydot(G)
@@ -100,7 +110,7 @@ G = nx.from_pandas_edgelist(sq, source='SUPV_NAME', target='EMPLOYEE', edge_attr
 
 org_net = Network(height='750px', width='100%', bgcolor='#222222', font_color='white', directed=True, layout='hierarchical')
 
-org_net.from_nx(G)
+org_net.from_nx(subtree)
 
 # Set node size based on grade
 # node_size = {
