@@ -7,6 +7,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pyvis.network import Network
 
+st.set_page_config(page_title='Pleus Crews',
+                   layout='wide')
+
 titles = ["Pleus' Crews",
           "Pleus' Rank Reviews",
           "Pleus' Who's Who",
@@ -22,7 +25,12 @@ streamlit.title(random.choice(titles))
 # Load data
 sq = pd.read_csv('roster.csv')
 sq = sq[['FULL_NAME', 'GRADE', 'OFFICE_SYMBOL', 'SUPV_NAME']]
+
 sq['EMPLOYEE'] = sq['FULL_NAME'].str.split(', ').apply(lambda x: ' '.join([x[0], x[1].split(' ')[0]]))
+sq['SUPV_NAME'] = sq['SUPV_NAME'].fillna('UNKNOWN SUPERVISOR')
+sq.loc[sq['SUPV_NAME'] == 'UNKNOWN', 'SUPV_NAME'] = 'UNKNOWN SUPERVISOR'
+sq.loc[~sq['SUPV_NAME'].isin(sq['EMPLOYEE']), 'SUPV_NAME'] = 'OUT OF UNIT'
+sq['OFFICE_SYMBOL'] = sq['OFFICE_SYMBOL'].fillna('UNKNOWN')
 
 # Define the rank order of the grades
 rank_order = {
@@ -45,20 +53,28 @@ rank_order = {
 sq['rank_order'] = sq['GRADE'].map(rank_order)
 sq = sq.sort_values('rank_order')
 
+
+
+
+
 # Create list of unique offices
-offices = sq['OFFICE_SYMBOL'].unique()
+offices = sorted(sq['OFFICE_SYMBOL'].unique())
+offices = ['All'] + offices
 # Create dropdown for office selection
-office = st.selectbox('Select Office', offices)
+selected_office = st.selectbox('Select Office', offices)
 # Filter to selected office
-#sq = sq[sq['OFFICE_SYMBOL'] == office]
+if selected_office != 'All':
+    sq = sq[sq['OFFICE_SYMBOL'] == selected_office]
 
 # Create list of unique supervisors
 supervisors = sq['SUPV_NAME'].unique()
+supervisors = ['All'] + sorted(supervisors)
 # Create dropdown for supervisor selection
-supervisor = st.selectbox('Select Supervisor', supervisors)
+selected_supervisor = st.selectbox('Select Supervisor', supervisors)
 # Filter to selected supervisor
-#sq = sq[sq['SUPV_NAME'] == supervisor]
-sq = sq.dropna()
+if selected_supervisor != 'All':
+    sq = sq[sq['SUPV_NAME'] == selected_supervisor]
+
 
 # Display dataframe
 st.dataframe(sq, use_container_width=True)
