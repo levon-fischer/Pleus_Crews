@@ -1,15 +1,23 @@
+import random
+
+import networkx as nx
+import pandas as pd
 import streamlit
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import networkx as nx
-import pydot
-import graphviz
 from pyvis.network import Network
 
-streamlit.title("Org Chart Generator")
+titles = ["Pleus' Crews",
+          "Pleus' Rank Reviews",
+          "Pleus' Who's Who",
+          "Choosin' Crews with Chief Pleus",
+          "Pleus' Organizational Muse",
+          "Pleus' Command Views",
+          "Pleus' Chain of Command Stand",
+          "Pleus' Team Scheme",
+          "Pleus' Crew Stew"]
+
+streamlit.title(random.choice(titles))
 
 # Load data
 sq = pd.read_csv('roster.csv')
